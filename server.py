@@ -1,6 +1,6 @@
 # server.py
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -33,6 +33,16 @@ def process(data: dict):
     print("/api/compose: compose data: ")
     print( data)  # see what frontend sent
     return {"result": 2}
+
+@app.post("/api/compose/midi")
+async def upload_midi( midiFile: UploadFile = File(...) ):
+    print("/api/compose/midi: upload midi data: ")
+    content = await midiFile.read()
+
+    print("Received file:", midiFile.filename)
+    print("Size:", len(content))
+
+    return {"status": "ok"}
 
 # rest:
 # | Method | Meaning |

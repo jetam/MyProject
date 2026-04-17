@@ -14,11 +14,39 @@ dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
 });
 
+async function upload( midiFile ) {
+    const formData = new FormData();
+    formData.append("midiFile", midiFile);
+
+    console.log( "before post" );
+
+    let response = await fetch("http://127.0.0.1:5000/api/compose/midi", {
+        method: "POST",
+        body: formData
+    });
+
+    const res = await response.json();
+        console.log( "midiii res:" );
+        console.log( res );
+}
+
 dropzone.addEventListener("drop", (e) => {
     console.log( "file dropped" );
     e.preventDefault();
 
-    const files = e.dataTransfer.files;
+
+    const file = e.dataTransfer.files[0];
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    upload( file );
+
+
+
+
+
+    /* const files = e.dataTransfer.files;
     const file = files[0];
 
     console.log("Dropped file:", file);
@@ -31,6 +59,6 @@ dropzone.addEventListener("drop", (e) => {
         dropzone.style.background = "#0b5ed7";
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file); */
 });
 

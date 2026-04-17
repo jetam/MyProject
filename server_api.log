@@ -1,10 +1,19 @@
 INFO:     Will watch for changes in these directories: ['/home/matej/code/MyProject']
 INFO:     Uvicorn running on http://127.0.0.1:5000 (Press CTRL+C to quit)
-INFO:     Started reloader process [34091] using StatReload
-INFO:     Started server process [34093]
+INFO:     Started reloader process [41514] using StatReload
+INFO:     Started server process [41516]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:57290 - "OPTIONS /api/compose HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40954 - "OPTIONS /api/predict HTTP/1.1" 200 OK
+/api/predict: predict data: 
+{'a': 5, 'b': 3}
+INFO:     127.0.0.1:40954 - "POST /api/predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41130 - "OPTIONS /api/compose HTTP/1.1" 200 OK
 /api/compose: compose data: 
 {'a': 5, 'b': 3}
-INFO:     127.0.0.1:57290 - "POST /api/compose HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41130 - "POST /api/compose HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35526 - "POST /api/composer HTTP/1.1" 404 Not Found
+/api/compose/midi: upload midi data: 
+Received file: Fur Elise(1).mid
+Size: 20648
+INFO:     127.0.0.1:60082 - "POST /api/compose/midi HTTP/1.1" 200 OK

@@ -6,6 +6,8 @@ kill $(lsof -t -i:5000)
 
 sleep 1
 
+#> server_static.log
+#> server_api.log
 
 STATIC_PORT=3000
 echo "Starting static file server on port $STATIC_PORT"
