@@ -1,11 +1,12 @@
 
+
 class Button
 {
     constructor( button ){
         this.button = button;
         this.sLog = String();
 
-        console.log( "in construcot" );
+        console.log( "in Button constructor" );
 
         this.bValid = false;
         if( button ) {

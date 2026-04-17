@@ -1,0 +1,19 @@
+127.0.0.1 - - [17/Apr/2026 13:00:40] code 404, message File not found
+127.0.0.1 - - [17/Apr/2026 13:00:40] "GET /frontend/main.htmll HTTP/1.1" 404 -
+127.0.0.1 - - [17/Apr/2026 13:00:40] code 404, message File not found
+127.0.0.1 - - [17/Apr/2026 13:00:40] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [17/Apr/2026 13:00:57] "GET /frontend/main.html HTTP/1.1" 200 -
+127.0.0.1 - - [17/Apr/2026 13:00:57] "GET /frontend/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Apr/2026 13:00:57] "GET /frontend/button.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Apr/2026 13:01:01] "GET /frontend/composer.html HTTP/1.1" 200 -
+127.0.0.1 - - [17/Apr/2026 13:06:36] "GET /frontend/composer.html HTTP/1.1" 304 -
+127.0.0.1 - - [17/Apr/2026 13:06:36] "GET /frontend/main.js HTTP/1.1" 304 -
+127.0.0.1 - - [17/Apr/2026 13:06:36] "GET /frontend/button.js HTTP/1.1" 304 -
+127.0.0.1 - - [17/Apr/2026 13:06:42] "GET /frontend/composer.html HTTP/1.1" 304 -
+127.0.0.1 - - [17/Apr/2026 13:11:29] "GET /frontend/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Apr/2026 13:11:29] "GET /frontend/button.js HTTP/1.1" 304 -
+127.0.0.1 - - [17/Apr/2026 13:32:18] "GET /frontend/composer.html HTTP/1.1" 304 -
+127.0.0.1 - - [17/Apr/2026 13:32:18] "GET /frontend/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Apr/2026 13:32:18] "GET /frontend/button.js HTTP/1.1" 304 -
+127.0.0.1 - - [17/Apr/2026 13:33:46] "GET /frontend/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Apr/2026 13:33:53] "GET /frontend/main.js HTTP/1.1" 304 -

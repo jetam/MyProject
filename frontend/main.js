@@ -1,51 +1,36 @@
 import * as Button from "./button.js";
 
 
+console.log( "blaaa" );
 
 let composerButton = new Button.ComposerButton( document.getElementById("composer") );
 
 let predictorButton = new Button.PredictorButton( document.getElementById("predictor") );
 
+let dropzone = document.getElementById("dropzone");
 
-/* fetch("http://127.0.0.1:5000/api/add", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ a: 5, b: 3 })
-})
-.then(res => res.json())
-.then(data => console.log(data.result)); */
+dropzone.addEventListener("dragover", (e) => {
+    dropzone.style.background = "red";
+    e.preventDefault();
+});
 
-/* from fastapi.middleware.cors import CORSMiddleware
+dropzone.addEventListener("drop", (e) => {
+    console.log( "file dropped" );
+    e.preventDefault();
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-) */
+    const files = e.dataTransfer.files;
+    const file = files[0];
 
+    console.log("Dropped file:", file);
 
-    // request
-// method: get, post, put, delete
-// endpoint: api/sum    // this maps to fastapi route
-// metadata      // tells server how to read the body
-// body (optional)
+    const reader = new FileReader();
 
-    //response
-// status code
-// body
-// headers
+    reader.onload = (event) => {
+        const data = event.target.result;
+        console.log("File content in RAM:", data);
+        dropzone.style.background = "#0b5ed7";
+    };
 
-// fastapi-> maps http requests to python functions
+    reader.readAsArrayBuffer(file);
+});
 
-// CORS prevents malicious websites calling your API
-/* from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-) */

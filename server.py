@@ -14,6 +14,14 @@ app.add_middleware(
 # api/compose
 # api/predict
 
+@app.get("/api/predict")
+def predict():
+    return {"message": "I am predictor"}
+
+@app.get("/api/compose")
+def predict():
+    return {"message": "I am composer"}
+
 @app.post("/api/predict")
 def process(data: dict):
     print("/api/predict: predict data: ")
@@ -25,3 +33,12 @@ def process(data: dict):
     print("/api/compose: compose data: ")
     print( data)  # see what frontend sent
     return {"result": 2}
+
+# rest:
+# | Method | Meaning |
+# | ------ | ------- |
+# | GET    | read    |
+# | POST   | create  |
+# | PUT    | replace |
+# | PATCH  | modify  |
+# | DELETE | remove  |

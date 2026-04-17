@@ -1,26 +1,31 @@
+MyProject:
 
-access frontend on localhost: file:///home/matej/code/MyProject/frontend/main.html
+run servers with ./startServer.sh
 
-run a http server in project dir (MyProject): python3 -m http.server 3000  // this is static file server!
-        HTTP SERVER RUNNING ON PORT 3000
+        access frontend on localhost: file:///home/matej/code/MyProject/frontend/main.html
 
-server.py must be in MyProject so it sees frontend htmls
+        run a http server in project dir (MyProject): python3 -m http.server 3000  // this is static file server!
+                HTTP SERVER RUNNING ON PORT 3000
 
-for fastapi you need server: python3 -m uvicorn server:app --reload --port 5000
-        API server running on 5000
+        server.py must be in MyProject so it sees frontend htmls
+
+        for fastapi you need server: python3 -m uvicorn server:app --reload --port 5000
+                API server running on 5000
+
+
 lsof -i -P -n | grep LISTEN // see which ports the server is listening on
 
-connect with http: http://localhost:3000/frontend/composer.html
+connect with http: http://127.0.0.1:3000/frontend/main.html
 
-test api: http://127.0.0.1:5000/api/test
+api endpoints: http://127.0.0.1:5000/api/compose
+api endpoints: http://127.0.0.1:5000/api/predict
 
 
 
-
-Frontend (JS fetch)
+Frontend
         ↓
-Python API (FastAPI)
+Python API
         ↓
-C++ logic (your core)
+C++ logic
         ↓
 Response → back to frontend
