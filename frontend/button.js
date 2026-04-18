@@ -41,7 +41,7 @@ export class PredictorButton extends Button
 
     async httpRequest() {       
 
-        const response = await fetch("http://127.0.0.1:5000/api/predict", {
+        const response = await fetch("http://127.0.0.1:5000/api/predictor", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -68,7 +68,7 @@ export class ComposerButton extends Button
 
     async httpRequest() {       
 
-        const response = await fetch("http://127.0.0.1:5000/api/compose", {
+        const response = await fetch("http://127.0.0.1:5000/api/composer", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

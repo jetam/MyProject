@@ -20,7 +20,7 @@ async function upload( midiFile ) {
 
     console.log( "before post" );
 
-    let response = await fetch("http://127.0.0.1:5000/api/compose/midi", {
+    let response = await fetch("http://127.0.0.1:5000/api/composer/midi", {
         method: "POST",
         body: formData
     });
@@ -42,23 +42,5 @@ dropzone.addEventListener("drop", (e) => {
 
     upload( file );
 
-
-
-
-
-    /* const files = e.dataTransfer.files;
-    const file = files[0];
-
-    console.log("Dropped file:", file);
-
-    const reader = new FileReader();
-
-    reader.onload = (event) => {
-        const data = event.target.result;
-        console.log("File content in RAM:", data);
-        dropzone.style.background = "#0b5ed7";
-    };
-
-    reader.readAsArrayBuffer(file); */
 });
 

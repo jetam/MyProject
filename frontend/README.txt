@@ -17,8 +17,13 @@ lsof -i -P -n | grep LISTEN // see which ports the server is listening on
 
 connect with http: http://127.0.0.1:3000/frontend/main.html
 
-api endpoints: http://127.0.0.1:5000/api/compose
-api endpoints: http://127.0.0.1:5000/api/predict
+api endpoints: http://127.0.0.1:5000/api/composer
+api endpoints: http://127.0.0.1:5000/api/predictor
+
+
+postgres:
+CREATE USER matej WITH PASSWORD 'postgres12345';
+psql -U matej -d myproject -h localhost 
 
 
 
