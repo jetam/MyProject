@@ -23,8 +23,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1e51aaa0-2ac5-47cc-b9c2-dafbbac28314" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/midi_parser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/midi_tester.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/rnn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/MyProject.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MyProject.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pg_connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pg_connection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/README.txt" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/README.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/server.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server_api.log" beforeDir="false" afterPath="$PROJECT_DIR$/server_api.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server_static.log" beforeDir="false" afterPath="$PROJECT_DIR$/server_static.log" afterDir="false" />
@@ -80,7 +87,7 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;onboarding.tips.debug.path&quot;: &quot;/home/matej/code/MyProject/backend/main.cpp&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>

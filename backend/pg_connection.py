@@ -10,6 +10,8 @@ class Connection:
         self.password = password
         self.port = port
 
+
+
     def connect(self):
         try:
             self.conn = psycopg.connect(
@@ -22,6 +24,22 @@ class Connection:
             print("Connected to database!")
         except Exception as e:
             print("Connection failed:", e)
+
+    def createTables( self ):
+        self.connect()
+        cursor = self.conn.cursor()
+        cursor.execute("""
+                CREATE TABLE IF NOT EXISTS midi_files (
+                    id SERIAL PRIMARY KEY,
+                    filename TEXT NOT NULL,
+                    path TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        self.conn.commit()
+        print("Tables created")
+        self.close()
+
 
     def close(self):
         if self.conn:

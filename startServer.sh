@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 
-kill $(lsof -t -i:3000)
+# Dynamic api server. starts server.py, trains neural network
+
 kill $(lsof -t -i:5000)
 
 
-sleep 1
+> server_api.log
 
-#> server_static.log
-#> server_api.log
-
-STATIC_PORT=3000
-echo "Starting static file server on port $STATIC_PORT"
-python3 -m http.server 3000 > server_static.log 2>&1 & # this is static file server!
 
 DYNAMIC_PORT=5000
 echo "Starting api server on port $DYNAMIC_PORT"
-python3 -m uvicorn server:app --reload --port 5000 > server_api.log 2>&1 & # this is dynamic fastapi server!
+PYTHONUNBUFFERED=1 python3 -m uvicorn server:app --reload --port 5000 | tee server_api.log  #PYTHONUNBUFFERED=1  -> does not buffer output. logs dont work without this

@@ -9,7 +9,7 @@ run servers with ./startServer.sh
 
         server.py must be in MyProject so it sees frontend htmls
 
-        for fastapi you need server: python3 -m uvicorn server:app --reload --port 5000
+        for fastapi you need server: python3 -m uvicorn server:app --reload --port 5000 // runs server.py
                 API server running on 5000
 
 
@@ -34,3 +34,7 @@ Python API
 C++ logic
         ↓
 Response → back to frontend
+
+
+        try:
+RNN , LSTM , transformer, 1D CNN
