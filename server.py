@@ -10,12 +10,49 @@ from pathlib import Path
 
 import backend.midi_tester as midi_tester
 
+import backend.music_transformer as transformer
+
 import os
 
 MIDI_DIR = "./backend/midiFiles" # uploaded midi files go here
-
 UPLOAD_DIR = "uploads/midi" # uploaded midi files go here
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def readMidiFiles():
+    songs = []
+    parser = MidiParser(transformer.MAX_VELOCITY, transformer.MAX_TIME, transformer.MAX_DURATION)
+
+    for file in Path(MIDI_DIR).iterdir():
+
+        if file.is_file():
+            filepath = os.path.join(MIDI_DIR, file.name)
+            parser.read_midi(filepath)
+
+        # midi_tester.testMidi( parser.convertedNotes( parser.midi_data ) )
+        songs.append(parser.midi_data)
+    return songs
+
+def composeSongTransformer( songs ):
+    parser = MidiParser(transformer.MAX_VELOCITY, transformer.MAX_TIME, transformer.MAX_DURATION)
+
+    model = transformer.MusicTransformer()
+    model = transformer.train(model, songs, epochs=5)
+
+    seedSong = songs[0][:50]
+
+    generated = transformer.compose(model, seedSong, length=200)
+    generatedNotes = parser.convertedNotes(generated)
+
+    midi_tester.testMidi(generatedNotes)
+
+def composeSongRNN( songs ):
+
+    parser = MidiParser(transformer.MAX_VELOCITY, transformer.MAX_TIME, transformer.MAX_DURATION)
+
+    generated = rnn.composeMusic(songs) # todo: make so functions will have same structure as in transformer
+    generatedNotes = parser.convertedNotes(generated) # todo: need this?
+    midi_tester.testMidi(generatedNotes, "midiRNN.mid" )
 
 
 app = FastAPI()
@@ -93,15 +130,14 @@ async def store_midi( midiFile: UploadFile = File(...) ):
     parser.read_midi( filepath )
     print("    end of parsing midi file !!!!!!!!!!!!")
 
-    songs = []
-    songs.append( parser.midi_data )
-
-    generated = rnn.compose( songs ) # todo
-
-    print( "    generated songs:" )
-    for note in generated:
-        print( note )
-        print( " " )
+    # songs = readMidiFiles()
+    #
+    # generated = rnn.compose( songs )
+    #
+    # print( "    generated songs:" )
+    # for note in generated:
+    #     print( note )
+    #     print( " " )
 
     return {"status": "ok"}
 
@@ -115,30 +151,9 @@ async def store_midi( midiFile: UploadFile = File(...) ):
 # | DELETE | remove  |
 
 
-#   read midi files to train on
+songs = readMidiFiles()
 
-
-
-for file in Path( MIDI_DIR ).iterdir():
-    parser = MidiParser()
-
-    if file.is_file():
-        print("reading fileeeee: ", file.name)
-
-        filepath = os.path.join(MIDI_DIR, file.name)
-        parser.read_midi(filepath)
-
-    midi_tester.testMidi( parser.midi_data )
-    # midi_tester.playMidi()
-
-    break # todo: delete
-
-    # for item in parser.midi_data:
-    #     print(item)
-
-
-
-
-print( "end of reading midi files" )
+# generated = rnn.compose( songs )
+composeSongRNN( songs )
 
 
