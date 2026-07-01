@@ -31,6 +31,9 @@ def readMidiFiles():
 
         # midi_tester.testMidi( parser.convertedNotes( parser.midi_data ) )
         songs.append(parser.midi_data)
+
+        # break # test delete
+
     return songs
 
 def composeSongTransformer( songs ):
@@ -52,7 +55,7 @@ def composeSongRNN( songs ):
 
     generated = rnn.composeMusic(songs) # todo: make so functions will have same structure as in transformer
     generatedNotes = parser.convertedNotes(generated) # todo: need this?
-    midi_tester.testMidi(generatedNotes, "midiRNN.mid" )
+    midi_tester.testMidi(generatedNotes, "midiRNN1.mid" )
 
 
 app = FastAPI()

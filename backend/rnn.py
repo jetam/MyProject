@@ -1,125 +1,157 @@
 
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
 
 DT_VOCAB = 17
 VEL_VOCAB = 9
-SEQUENCE_LENGTH = 20
+SEQUENCE_LENGTH = 64
+
+
+# class MusicDataset(Dataset):
+#     def __init__(self, songs, seq_len):
+#         self.songs = songs
+#         self.seq_len = seq_len
+#
+#     def __len__(self):
+#         return len(self.songs) * 50  # samples per song
+#
+#     def __getitem__(self, idx):
+#         song = self.songs[idx % len(self.songs)]
+#
+#         start = torch.randint(0, len(song) - self.seq_len, (1,)).item()
+#         seq = song[start:start + self.seq_len]
+#
+#         notes = torch.tensor([n[0] for n in seq], dtype=torch.long)
+#         others = torch.tensor([[n[1], n[2]] for n in seq], dtype=torch.long)
+#
+#         return notes, others
 
 class MusicDataset(Dataset):
+
     def __init__(self, songs, seq_len):
-        self.samples = []
-
-        for song in songs:
-
-            if len(song) <= seq_len:
-                continue
-
-            # Sliding windows
-            for i in range(len(song) - seq_len):
-                sequence = song[i:i + seq_len]
-                target = song[i + seq_len]
-
-                self.samples.append((sequence, target))
+        self.songs = songs
+        self.seq_len = seq_len
 
     def __len__(self):
-        return len(self.samples)
+        return len(self.songs) * 100
 
     def __getitem__(self, idx):
+        song = self.songs[idx % len(self.songs)]
 
-        sequence, target = self.samples[idx]
+        start = torch.randint(0, len(song) - self.seq_len, (1,)).item()
+        seq = song[start:start + self.seq_len]
 
-        notes = torch.tensor(
-            [note[0] for note in sequence],
-            dtype=torch.long
-        )
+        # return PURE PYTHON LISTS (fast)
+        notes = [n[0] for n in seq]
+        others = [(n[1], n[2]) for n in seq]
 
-        others = torch.tensor(
-            [[note[1], note[2]] for note in sequence],
-            dtype=torch.long
-        )
+        return notes, others
 
-        target_note = torch.tensor(
-            target[0],
-            dtype=torch.long
-        )
+def collate_fn(batch):
+    notes, others = zip(*batch)
 
-        target_other = torch.tensor(
-            [target[1], target[2]],
-            dtype=torch.long
-        )
+    notes = torch.tensor(notes, dtype=torch.long)
 
-        return notes, others, target_note, target_other
+    others = torch.tensor(others, dtype=torch.long)
+
+    return notes, others
 
 
 class MusicRNN(nn.Module):
 
     def __init__(
-            self,
-            num_notes=128,
-            embed_dim=32,
-            hidden_size=256,
-            num_layers=2,
+        self,
+        num_notes=128,
+        embed_dim=32,
+        vel_vocab=VEL_VOCAB,
+        dt_vocab=DT_VOCAB,
+        hidden_size=256,
+        num_layers=2,
+        dropout=0.1,
     ):
         super().__init__()
 
-        # MIDI pitch embedding
-        self.embedding = nn.Embedding(num_notes, embed_dim)
+        self.note_emb = nn.Embedding(num_notes, embed_dim)
+        self.vel_emb = nn.Embedding(vel_vocab, 8)
+        self.dt_emb = nn.Embedding(dt_vocab, 8)
 
-        # velocity + delta_time
-        other_features = 2
+        self.dropout = nn.Dropout(dropout)   # 👈 NEW
+
+        self.event_proj = nn.Linear(embed_dim + 16, hidden_size)
 
         self.rnn = nn.LSTM(
-            input_size=embed_dim + other_features,
+            input_size=hidden_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0
         )
 
-        # Predict next pitch
         self.note_head = nn.Linear(hidden_size, num_notes)
-
-        # Predict next velocity + delta_time
-        self.vel_head = nn.Linear(hidden_size, VEL_VOCAB)
-        self.dt_head = nn.Linear(hidden_size, DT_VOCAB)
-
+        self.vel_head = nn.Linear(hidden_size, vel_vocab)
+        self.dt_head = nn.Linear(hidden_size, dt_vocab)
 
     def forward(self, notes, others):
-        """
-        notes  : (batch, seq_len)
-        others : (batch, seq_len, 2)
-        """
-        note_embedding = self.embedding(notes)
 
-        x = torch.cat(
-            [note_embedding, others],
-            dim=2,
-        )
+        vel = others[:, :, 0].long()
+        dt  = others[:, :, 1].long()
+
+        x = torch.cat([
+            self.note_emb(notes),
+            self.vel_emb(vel),
+            self.dt_emb(dt)
+        ], dim=-1)
+
+        x = self.dropout(x)
+
+        x = self.event_proj(x)
+
+        x = self.dropout(x)
 
         out, _ = self.rnn(x)
 
-        # Use only the last hidden state
+        out = self.dropout(out)
+
+        return (
+            self.note_head(out),
+            self.vel_head(out),
+            self.dt_head(out)
+        )
+
+    def step(self, note, vel, dt, hidden=None):
+
+        note = note.view(-1)
+        vel  = vel.view(-1)
+        dt   = dt.view(-1)
+
+        note_x = self.note_emb(note)
+        vel_x  = self.vel_emb(vel)
+        dt_x   = self.dt_emb(dt)
+
+        x = torch.cat([note_x, vel_x, dt_x], dim=-1)
+
+        x = self.dropout(x)          # 👈 SAME IDEA AS TRAINING PATH
+
+        x = self.event_proj(x)
+
+        x = x.unsqueeze(1)
+
+        out, hidden = self.rnn(x, hidden)
+
         h = out[:, -1, :]
 
-        note_logits = self.note_head(h)
-        # other_output = self.other_head(h)
-        vel_logits = self.vel_head(h)
-        dt_logits = self.dt_head(h)
+        return (
+            self.note_head(h),
+            self.vel_head(h),
+            self.dt_head(h),
+            hidden
+        )
 
-        print("note_embedding:", note_embedding.shape)
-        print("others:", others.shape)
-        print("concat result:", torch.cat([note_embedding, others], dim=2).shape)
-
-        return note_logits, vel_logits, dt_logits
-        # return note_logits, other_output
-
-def train(model, dataloader, epochs=10, lr=1e-3):
-    # model.to(device)
-
-    epochs = 1 # todo: test delete
+# =========================
+# TRAINING (autoregressive)
+# =========================
+def train(model, dataloader, epochs=3, lr=1e-3):
 
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -130,23 +162,28 @@ def train(model, dataloader, epochs=10, lr=1e-3):
     for epoch in range(epochs):
         total_loss = 0.0
 
-        print("dataloader size: ", len( dataloader ) )
+        print("dataloader size:", len(dataloader))
 
-        loopCount = 0
-        for notes, others, y_notes, y_others in dataloader:
+        for notes, others in dataloader:
 
-            y_vel = y_others[:, 0].long()
-            y_dt = y_others[:, 1].long()
-
-            # forward
             note_logits, vel_logits, dt_logits = model(notes, others)
 
-            # losses
-            loss_note = note_loss_fn(note_logits, y_notes)
-            loss_vel = vel_loss_fn(vel_logits, y_vel)
-            loss_dt = dt_loss_fn(dt_logits, y_dt)
+            loss_note = note_loss_fn(
+                note_logits[:, :-1].reshape(-1, note_logits.size(-1)),
+                notes[:, 1:].reshape(-1)
+            )
 
-            loss = loss_note + loss_vel + loss_dt
+            loss_vel = vel_loss_fn(
+                vel_logits[:, :-1].reshape(-1, vel_logits.size(-1)),
+                others[:, 1:, 0].reshape(-1).long()
+            )
+
+            loss_dt = dt_loss_fn(
+                dt_logits[:, :-1].reshape(-1, dt_logits.size(-1)),
+                others[:, 1:, 1].reshape(-1).long()
+            )
+
+            loss = 2 * loss_note + loss_vel + loss_dt
 
             opt.zero_grad()
             loss.backward()
@@ -154,68 +191,103 @@ def train(model, dataloader, epochs=10, lr=1e-3):
 
             total_loss += loss.item()
 
-            loopCount += 1
-            if loopCount > 100: # todo: this loops like 2000 times. its slow! check why
-                break
-
         print(f"Epoch {epoch+1} | loss {total_loss:.4f}")
+
 
 @torch.no_grad()
 def compose(model, seed_notes, seed_others, length=100):
-    print( "in compose" )
+
     model.eval()
 
-    notes = seed_notes.unsqueeze(0)      # (1, T)
-    others = seed_others.unsqueeze(0)    # (1, T, 2)
+    notes = seed_notes.tolist()
+    others = seed_others.tolist()
 
+    hidden = None
     generated = []
 
-    def sample(logits, temperature=1.0):
-        probs = torch.softmax(logits / temperature, dim=-1)
-        return torch.multinomial(probs, 1).squeeze(-1)  # (1,)
+    # warmup
+    for i in range(len(notes)):
 
+        note = torch.tensor([notes[i]])
+        vel  = torch.tensor([others[i][0]])
+        dt   = torch.tensor([others[i][1]])
+
+        _, _, _, hidden = model.step(note, vel, dt, hidden)
+
+    # generate
     for _ in range(length):
-        print( "compose in for loop" )
-        note_logits, vel_logits, dt_logits = model(notes, others)
 
-        next_note = sample(note_logits)  # (1,)
-        next_vel = sample(vel_logits)    # (1,)
-        next_dt = sample(dt_logits)      # (1,)
+        note = torch.tensor([notes[-1]])
+        vel  = torch.tensor([others[-1][0]])
+        dt   = torch.tensor([others[-1][1]])
 
-        generated.append((
-            next_note.item(),
-            next_vel.item(),
-            next_dt.item()
-        ))
+        note_logits, vel_logits, dt_logits, hidden = model.step(
+            note, vel, dt, hidden
+        )
 
-        # build next step input
-        next_note_in = next_note.unsqueeze(1)  # (1,1)
-        next_other_in = torch.stack([next_vel, next_dt], dim=-1).unsqueeze(1)  # (1,1,2)
+        def sample(logits):
+            probs = torch.softmax(logits, dim=-1)
+            return torch.multinomial(probs, 1).item()
 
-        notes = torch.cat([notes, next_note_in], dim=1)
-        others = torch.cat([others, next_other_in], dim=1)
+        next_note = sample(note_logits)
+        next_vel  = sample(vel_logits)
+        next_dt   = sample(dt_logits)
+
+        generated.append((next_note, next_vel, next_dt))
+
+        notes.append(next_note)
+        others.append([next_vel, next_dt])
 
     return generated
 
-def composeMusic( songs ):
+
+# =========================
+# ENTRY POINT
+# =========================
+def composeMusic(songs):
+
     dataset = MusicDataset(songs, SEQUENCE_LENGTH)
-    loader = DataLoader(dataset, batch_size=32, shuffle=True)
+    loader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=2, pin_memory=True, collate_fn=collate_fn)
 
     model = MusicRNN()
 
-    train(model, loader, epochs=10)
+    train(model, loader, epochs=3) # todo
 
     seed_notes = torch.tensor(
-        [note[0] for note in songs[0][:SEQUENCE_LENGTH]],
+        [n[0] for n in songs[0][:SEQUENCE_LENGTH]],
         dtype=torch.long
     )
 
     seed_others = torch.tensor(
-        [note[1:] for note in songs[0][:SEQUENCE_LENGTH]],
-        dtype=torch.float32
+        [[n[1], n[2]] for n in songs[0][:SEQUENCE_LENGTH]],
+        dtype=torch.long
     )
 
     music = compose(model, seed_notes, seed_others, length=200)
 
     print(music[:10])
     return music
+
+
+# improvements:
+# 1. Embed velocity and time too (big improvement) done
+# 2. Predict autoregressively during training done
+# 3. Longer sequences done
+# 4. Don't restart LSTM state during generation // done got slow training here
+# 5. Add dropout done
+# 6. Weight losses differently done
+# 7. Teacher forcing schedule skip
+# 8. Better pitch representation (octaves): todo
+#     Split note into:
+#     pitch_class(0–11)
+#     octave(0–10 - ish)
+#     Then embed both separately and concatenate.
+
+# 11. Gradient clipping maybe implement, probs not?
+# 12. Layer normalization implement
+# 16. Consider predicting NOTE EVENTS instead of separate outputs) (try in seperate file)
+
+# train on specific piece:
+# Step 1: “prime” the model
+# Step 2: generate from last state
+# also Use “teacher forcing warm-up”
