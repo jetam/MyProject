@@ -40,7 +40,7 @@ def composeSongTransformer( songs ):
     parser = MidiParser(transformer.MAX_VELOCITY, transformer.MAX_TIME, transformer.MAX_DURATION)
 
     model = transformer.MusicTransformer()
-    model = transformer.train(model, songs, epochs=5)
+    model = transformer.train(model, songs, epochs=2) # todo
 
     seedSong = songs[0][:50]
 
@@ -69,9 +69,6 @@ app.add_middleware(
 
 dbConnection = Connection( "localhost", "myproject", "matej", "postgres12345" )
 dbConnection.createTables()
-
-# api/compose
-# api/predict
 
 @app.get("/api/predictor")
 def predict():
@@ -157,6 +154,6 @@ async def store_midi( midiFile: UploadFile = File(...) ):
 songs = readMidiFiles()
 
 # generated = rnn.compose( songs )
-composeSongRNN( songs )
-
+# composeSongRNN( songs )
+composeSongTransformer(songs)
 

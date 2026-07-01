@@ -270,9 +270,6 @@ def compose(model, seed_notes, seed_others, length=100):
     return generated
 
 
-# =========================
-# ENTRY
-# =========================
 def composeMusic(songs):
 
     dataset = MusicDataset(songs, SEQUENCE_LENGTH)
@@ -297,12 +294,3 @@ def composeMusic(songs):
 
     return compose(model, seed_notes, seed_others, length=200)
 
-
-
-
-
-#   todo:
-# # train on specific piece:
-# # Step 1: “prime” the model
-# # Step 2: generate from last state
-# # also Use “teacher forcing warm-up”

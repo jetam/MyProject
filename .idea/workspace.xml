@@ -24,7 +24,12 @@
   <component name="ChangeListManager">
     <list default="true" id="1e51aaa0-2ac5-47cc-b9c2-dafbbac28314" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/music_transformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music_transformer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/rnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/rnn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/midiRNN1.mid" beforeDir="false" afterPath="$PROJECT_DIR$/midiRNN1.mid" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/outputTest.mid" beforeDir="false" afterPath="$PROJECT_DIR$/outputTest.mid" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server_api.log" beforeDir="false" afterPath="$PROJECT_DIR$/server_api.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
