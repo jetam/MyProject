@@ -1,56 +1,45 @@
 
+import math
 import mido
-import numpy as np
+from . import music_config
+from . import midi_tester
+import os
 
 # This is only intended for piano/ single instrument music!
 
 MAX_MIDI_PITCH = 127
 MAX_MIDI_VELOCITY = 127
 
-# INFO: Tempo is put into times and duration of the notes
-#       Every MIDI event has time. the time difference between events is time * current relativeTempo
+# INFO: Tempo is put into times. Every MIDI event has time. the time difference between events is time * current relativeTempo
 
 
 
 class MidiParser:
-    def __init__(self, MAX_VELOCITY, MAX_TIME, MAX_DURATION, MAX_PITCH = 127 ):
+    def __init__(self, MAX_VELOCITY = music_config.MAX_VELOCITY, MAX_TIME = music_config.MAX_TIME, MAX_DURATION=music_config.MAX_DURATION, MAX_PITCH=music_config.MAX_PITCH ):
         self.MAX_VELOCITY = MAX_VELOCITY
         self.MAX_TIME = MAX_TIME
         self.MAX_DURATION = MAX_DURATION
         self.MAX_PITCH = MAX_PITCH
 
-    # convert MIDI into feature vectors: pitch, velocity, time. Time = time since last event (note or meta message)
-    def read_midi(self, midi_file_path):
 
+    # convert MIDI into feature vectors: pitch, velocity, time. Time = time since previous note started
+    def read_midi(self, midi_file_path):
         mid = mido.MidiFile( midi_file_path )
 
         current_time = 0
         startTime = False # Start measuring time at first note event
         self.midi_data = [] # put feature vectors here [pitch, velocity, time]
         self.meta_data = [] # meta data. todo: need this?
-        active_notes = {} # notes that havent been turned off yet. This is used to get note durations
-        noteNumber = 0
-        midiTemporaryData = []
 
-        maxTime = 0.0 # time and delay need to be quantized.
-        maxDuration = 0.0
-
-
-        def handleActiveNote(msg):
-            noteNum, start_time, velocity, relativeTempo = active_notes[msg.note]
-            duration = current_time - start_time
-
-            midiTemporaryData.append(
-                ( msg.note, noteNum, velocity, start_time, duration, relativeTempo )
-            )
-            del active_notes[msg.note]
-
+        maxTime = 0.0 # time needs to be quantized.
 
         startTempo = -1
         currentTempo = 1
+        previousTime = 0
+        relativeTempo = 1
 
         for msg in mid:
-            # print( "        Midi msg: " + str(msg) )
+            print( "        Midi msg: " + str(msg) )
             # todo: handle different channels? - have option to set only main channel
 
             noteType = msg.type
@@ -67,72 +56,54 @@ class MidiParser:
                     startTempo = msg.tempo
                 currentTempo = msg.tempo
 
-
             if noteType != 'note_on' and noteType != 'note_off':
 
-                self.meta_data.append( [noteNumber, msg] )
+                self.meta_data.append( msg )
                 # todo: include control change 64. (sustain). also check if note numbering is ok. include sustain in midi_data
                 # todo: also include cc 7 (volume)
                 # todo: set tempo:  Midi msg: MetaMessage('set_tempo', tempo=983606, time=0.03225803333333333)
                 # todo: tempo change can be put in times. read start tempo in beginning. then change times: time = time * startTempo/currentTempo
                 continue
 
-
-
             if msg.velocity == 0 and noteType == 'note_on':
                 noteType = 'note_off' # some MIDI files have onNotes with velocity 0 instead of offNotes
 
-            if noteType == "note_on":
-                noteNumber += 1
+            if noteType != "note_on":
+                continue # note_off carries no data we need since we don't track duration
 
-                # todo: whatif active notes already contains the note? - end last note and startnew one?
-                if active_notes.__contains__( msg.note ):
-                    continue
+            deltaTime = ( current_time - previousTime ) * relativeTempo
+            previousTime = current_time
 
-                active_notes[msg.note] = (noteNumber, current_time, msg.velocity, startTempo/currentTempo)
-
-            elif noteType == "note_off":
-                if msg.note not in active_notes:
-                    continue
-                handleActiveNote( msg )
-            else:
-                print( "unknown msg type {}".format( noteType ) )
-
-        # order by noteNum
-        sortedData = sorted(midiTemporaryData, key=lambda x: x[1])
-
-        previousTime = 0
-        relativeTempo = 1
-
-        for msg in sortedData:
-
-            deltaTime = ( msg[3] - previousTime ) * relativeTempo
-            duration = msg[4] * relativeTempo
-            previousTime = msg[3]
-
-            velocity = ( msg[2] // ( MAX_MIDI_VELOCITY // self.MAX_VELOCITY ) )  # max is 8
+            velocity = ( msg.velocity // ( MAX_MIDI_VELOCITY // self.MAX_VELOCITY ) )  # max is 8
 
             if( maxTime < deltaTime ):
                 maxTime = deltaTime
-            if( maxDuration < duration ):
-                maxDuration = duration
 
-            self.midi_data.append([msg[0], velocity, deltaTime, duration])  # ( note, velocity, delta time, duration)
+            self.midi_data.append([msg.note, velocity, deltaTime])  # ( note, velocity, delta time )
 
-            relativeTempo = msg[5]
+            relativeTempo = startTempo / currentTempo
+
+        maxTime = maxTime * 0.95 # cut off too long times whet putting time into bins
 
         for data in self.midi_data:
+            # print("data:", data)
+            t = min(data[2], maxTime)
+            data[2] = int(self.MAX_TIME * t // maxTime)
 
-            data[2] = ( self.MAX_TIME * data[2] ) // maxTime
+        test_name = os.path.basename(midi_file_path)
+        output_path = os.path.join("tests", test_name)
 
-            # data[3] =  ( self.MAX_DURATION * data[3] ) // maxDuration # todo: doesnt work well.
-            data[3] = self.MAX_DURATION # todo: keep note duration constant for now, maybe change later
-
-        self.midi_data = [song[:-1] for song in self.midi_data]
+        midi_tester.testMidi(
+            self.convertedNotes(self.midi_data),
+            output_path
+        )
 
 
     def convertedNotes(self, generatedNotes): # todo: this is used after transformer. make so everything is universal
         print( "in convertedNotes" )
-        converted = [(p, v * (MAX_MIDI_VELOCITY // self.MAX_VELOCITY), dt / self.MAX_TIME) for (p, v, dt) in generatedNotes] # leave out duration for now: u / self.MAX_DURATION
+        converted = []
+        for p, v, dt in generatedNotes:
+            velocity = v * (MAX_MIDI_VELOCITY // self.MAX_VELOCITY)
+            time = dt * music_config.DT_MAX_SECONDS / self.MAX_TIME
+            converted.append((p, velocity, time))
         return converted
-

@@ -6,31 +6,13 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
 
-# ============================================================
-# CONFIG
-# ============================================================
-
-PITCH_CLASS_VOCAB = 12
-OCTAVE_VOCAB = 11  # adjust if your dataset differs
-PITCH_VOCAB = 128
-VEL_VOCAB = 9
-DT_VOCAB = 17
-# DUR_VOCAB = 17
-DUR_VOCAB = 2
-
-# Max quantized values that transformer takes
-MAX_PITCH = PITCH_VOCAB - 1
-MAX_VELOCITY = VEL_VOCAB - 1
-MAX_TIME = DT_VOCAB - 1
-MAX_DURATION = DUR_VOCAB - 1
+from .music_config import (
+    PITCH_CLASS_VOCAB, OCTAVE_VOCAB, PITCH_VOCAB, VEL_VOCAB, DT_VOCAB, DUR_VOCAB,
+    MAX_PITCH, MAX_VELOCITY, MAX_TIME, MAX_DURATION,
+)
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-
-
-# ============================================================
-# DATASET
-# ============================================================
 
 class MusicDataset(Dataset):
     def __init__(self, songs, seq_len=256):
@@ -59,9 +41,6 @@ class MusicDataset(Dataset):
             pc = p % 12
             po = p // 12
 
-            # ====================================================
-            # TRUE RELATIVE PITCH (THIS IS THE FIX)
-            # ====================================================
             rel = torch.zeros_like(p)
             rel[1:] = p[1:] - p[:-1]
 
@@ -73,10 +52,6 @@ class MusicDataset(Dataset):
         return split(x), split(y)
 
 
-# ============================================================
-# MODEL
-# ============================================================
-
 class MusicTransformer(nn.Module):
     def __init__(self, d_model=256, nhead=8, num_layers=6, dropout=0.1):
         super().__init__()
@@ -87,7 +62,6 @@ class MusicTransformer(nn.Module):
         self.vel_emb = nn.Embedding(VEL_VOCAB, d_model)
         self.dt_emb = nn.Embedding(DT_VOCAB, d_model)
 
-        # relative pitch embedding (now meaningful)
         self.rel_emb = nn.Embedding(128, d_model)
 
         encoder_layer = nn.TransformerEncoderLayer(
@@ -148,10 +122,6 @@ class MusicTransformer(nn.Module):
         )
 
 
-# ============================================================
-# LOSS
-# ============================================================
-
 def loss_fn(logits, targets):
     lpc, lpo, lv, ld = logits
     tpc, tpo, tv, td = targets
@@ -163,10 +133,6 @@ def loss_fn(logits, targets):
         F.cross_entropy(ld.reshape(-1, DT_VOCAB), td.reshape(-1))
     )
 
-
-# ============================================================
-# TRAIN
-# ============================================================
 
 def train(model, songs, epochs=5, batch_size=8, lr=3e-4):
     model = model.to(DEVICE)
@@ -197,10 +163,6 @@ def train(model, songs, epochs=5, batch_size=8, lr=3e-4):
     return model
 
 
-# ============================================================
-# GENERATION
-# ============================================================
-
 @torch.no_grad()
 def compose(model, seedSong, length=200, temperature=1.0):
     model.eval()
@@ -224,7 +186,6 @@ def compose(model, seedSong, length=200, temperature=1.0):
 
     for _ in range(length):
 
-        # TRUE relative pitch (this is the key fix)
         rel = torch.zeros_like(p)
         rel[:, 1:] = p[:, 1:] - p[:, :-1]
         rel = torch.clamp(rel + 64, 0, 127)

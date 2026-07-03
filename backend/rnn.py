@@ -3,14 +3,11 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 import torch.nn as nn
 
-DT_VOCAB = 17
-VEL_VOCAB = 9
+from .music_config import DT_VOCAB, VEL_VOCAB
+
 SEQUENCE_LENGTH = 64
 
 
-# =========================
-# DATASET
-# =========================
 class MusicDataset(Dataset):
 
     def __init__(self, songs, seq_len):
@@ -18,7 +15,7 @@ class MusicDataset(Dataset):
         self.seq_len = seq_len
 
     def __len__(self):
-        return len(self.songs) * 50  # slightly more signal
+        return len(self.songs) * 50
 
     def __getitem__(self, idx):
         song = self.songs[idx % len(self.songs)]
@@ -268,7 +265,6 @@ def compose(model, seed_notes, seed_others, length=100):
             seq_others = seq_others[-SEQUENCE_LENGTH:]
 
     return generated
-
 
 def composeMusic(songs):
 

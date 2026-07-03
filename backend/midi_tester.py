@@ -1,5 +1,6 @@
 import mido
 from mido import Message, MidiFile, MidiTrack, MetaMessage
+from . import midi_parser as midiParser
 
 
 # -----------------------------
@@ -77,7 +78,7 @@ def testMidi(notes, fileName = "outputTest.mid"):
         delta = time - last_time
         last_time = time
 
-        print( "message: ", msg_type, note, velocity, delta )
+        # print( "message: ", msg_type, note, velocity, delta )
 
         track.append(Message(
             msg_type,
@@ -93,4 +94,12 @@ def testMidi(notes, fileName = "outputTest.mid"):
     print("saved:", fileName)
 
 
+def test():
+    parser = midiParser.MidiParser()
+    parser.read_midi("./midiFiles/maestro/maestro-v3.0.0/2004/MIDI-Unprocessed_SMF_02_R1_2004_01-05_ORIG_MID--AUDIO_02_R1_2004_05_Track05_wav.midi")
+    # midi_data stores velocity/delta_time as bin indices, not real MIDI values - convert back before playback
+    testMidi(parser.convertedNotes(parser.midi_data), "test1.mid")
+
+if __name__ == "__main__":
+    test()
 

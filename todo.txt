@@ -1,0 +1,48 @@
+1. Train for far more epochs
+  You're using epochs=2. Music transformers typically need 50–200 epochs to converge on small datasets. 2 epochs barely scratches the surface — the model hasn't learned anything meaningful
+  yet. This is probably the #1 issue.
+
+  2. Dataset size
+  For your model size (~5–10M params at d_model=256):
+
+  ┌─────────┬───────────────────────────────────────┐
+  │  Songs  │                Result                 │
+  ├─────────┼───────────────────────────────────────┤
+  │ < 50    │ Severe overfitting, repetitive output │
+  ├─────────┼───────────────────────────────────────┤
+  │ 100–200 │ Starts working, limited variety       │
+  ├─────────┼───────────────────────────────────────┤
+  │ 300–500 │ Good sweet spot for this model size   │
+  ├─────────┼───────────────────────────────────────┤
+  │ 1000+   │ Strong generalization                 │
+  └─────────┴───────────────────────────────────────┘
+
+  Quality beats quantity — 100 piano sonatas of the same composer will outperform 500 mixed-genre files. Keep genre consistent.
+
+  3. You have no validation loss
+  Right now you can't tell if the model is learning or overfitting. Add a train/val split (90/10) and log both losses each epoch. Overfitting looks like train loss falling while val loss
+  rises or plateaus.
+
+  4. The midi_data format may be losing information
+  In midi_parser.py line 129, duration is hardcoded to MAX_DURATION (constant for all notes). This means the model can never learn note length variation. Worth fixing when you want richer
+  output.
+
+  5. Smaller batch size + more steps beats fewer steps on CPU
+  On CPU, batch_size=8 with epochs=2 is very few gradient updates. Consider batch_size=4, epochs=100.
+
+  ---
+  Practical starting point: grab 200–300 MIDI files from a single genre (e.g. classical piano from piano-midi.de or MAESTRO dataset), run T2 for 100 epochs, and watch the validation loss.
+
+
+piano-midi.de
+
+
+claude --no-ui
+claude --print
+
+todo:
+ dont save uploaded songs to database 
+ save models to database 
+ finetune on songs 
+ go throught all of the models, check for improvements
+ figure out how to compute models on cloud (google)

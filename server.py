@@ -11,10 +11,12 @@ from pathlib import Path
 import backend.midi_tester as midi_tester
 
 import backend.music_transformer as transformer
+import backend.music_transformerT1 as transformerT1
+import backend.music_transformerT2 as transformerT2
 
 import os
 
-MIDI_DIR = "./backend/midiFiles" # uploaded midi files go here
+MIDI_DIR = "./backend/midiFiles/midiFavourites" # uploaded midi files go here
 UPLOAD_DIR = "uploads/midi" # uploaded midi files go here
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -29,8 +31,8 @@ def readMidiFiles():
             filepath = os.path.join(MIDI_DIR, file.name)
             parser.read_midi(filepath)
 
-        # midi_tester.testMidi( parser.convertedNotes( parser.midi_data ) )
-        songs.append(parser.midi_data)
+            # midi_tester.testMidi( parser.convertedNotes( parser.midi_data ) )
+            songs.append(parser.midi_data)
 
         # break # test delete
 
@@ -47,7 +49,33 @@ def composeSongTransformer( songs ):
     generated = transformer.compose(model, seedSong, length=200)
     generatedNotes = parser.convertedNotes(generated)
 
-    midi_tester.testMidi(generatedNotes)
+    midi_tester.testMidi(generatedNotes, "midiTransformer")
+
+def composeSongTransformerT1( songs ):
+    parser = MidiParser(transformer.MAX_VELOCITY, transformer.MAX_TIME, transformer.MAX_DURATION)
+
+    model = transformerT1.MusicTransformerT1()
+    model = transformerT1.train(model, songs, epochs=2) # todo
+
+    seedSong = songs[0][:50]
+
+    generated = transformerT1.compose(model, seedSong, length=200)
+    generatedNotes = parser.convertedNotes(generated)
+
+    midi_tester.testMidi(generatedNotes, "midiTransformerT1")
+
+def composeSongTransformerT2( songs ):
+    parser = MidiParser(transformer.MAX_VELOCITY, transformer.MAX_TIME, transformer.MAX_DURATION)
+
+    model = transformerT2.MusicTransformerT2()
+    model = transformerT2.train(model, songs, epochs=1) # todo
+
+    seedSong = songs[0][:50]
+
+    generated = transformerT2.compose(model, seedSong, length=200)
+    generatedNotes = parser.convertedNotes(generated)
+
+    midi_tester.testMidi(generatedNotes, "midiTransformerT2")
 
 def composeSongRNN( songs ):
 
@@ -97,6 +125,8 @@ async def store_midi( midiFile: UploadFile = File(...) ):
 
     print("Received file:", midiFile.filename)
     print("Size:", len(content))
+
+    # todo: dont save uploaded midi files. save ai models in database!
 
     filepath = os.path.join(UPLOAD_DIR, midiFile.filename)
 
@@ -154,6 +184,8 @@ async def store_midi( midiFile: UploadFile = File(...) ):
 songs = readMidiFiles()
 
 # generated = rnn.compose( songs )
-# composeSongRNN( songs )
-composeSongTransformer(songs)
+composeSongRNN( songs )
+# composeSongTransformer(songs)
+# composeSongTransformerT1(songs)
+# composeSongTransformerT2(songs)
 
