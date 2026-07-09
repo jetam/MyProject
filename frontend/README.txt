@@ -4,7 +4,7 @@ train models: python3 -m music.ml.train    // run from backend dir!
 
 run servers with ./startServer.sh
 
-        access frontend on localhost: file:///home/matej/code/MyProject/frontend/main.html
+        access frontend on localhost: file:///home/matej/code/MyProject/frontend/index.html
 
         run a http server in project dir (MyProject): python3 -m http.server 3000  // this is static file server!
                 HTTP SERVER RUNNING ON PORT 3000
@@ -17,7 +17,7 @@ run servers with ./startServer.sh
 
 lsof -i -P -n | grep LISTEN // see which ports the server is listening on
 
-connect with http: http://127.0.0.1:3000/frontend/main.html
+connect with http: http://127.0.0.1:3000/frontend/index.html
 
 api endpoints: http://127.0.0.1:5000/api/composer # todo: changed
 api endpoints: http://127.0.0.1:5000/api/predictor
