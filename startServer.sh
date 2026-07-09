@@ -2,6 +2,8 @@
 
 # Dynamic api server. starts server.py, trains neural network
 
+cd "$(dirname "$0")/backend" || exit 1
+
 kill $(lsof -t -i:5000)
 
 

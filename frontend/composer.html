@@ -18,12 +18,21 @@
     </header>
 
     <div class="container">
-        <div class="d-flex justify-content-center gap-5 text-center">
-            <a href="main.html"
-                class="card text-center shadow-sm p-4 text-decoration-none text-white bg-primary hover-card" id="composer">
-                <h3>Generate MIDI</h3>
-            </a>
-            <div id="dropzone" style="width:300px;height:150px;background-color: #0b5ed7;border:2px dashed #ffffff;"> Drop MIDI file here </div>
+        <div class="d-flex flex-column align-items-center gap-3 text-center">
+            <div id="dropzone" style="width:300px;height:150px;background-color: #0b5ed7;border:2px dashed #ffffff;display:flex;align-items:center;justify-content:center;color:#ffffff;"> Drop MIDI file here </div>
+            <div class="d-flex align-items-center gap-3">
+                <select id="modelSelect" class="form-select d-none" style="width:auto;"></select>
+
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="main.html"
+                    class="card text-center shadow-sm p-4 text-decoration-none text-white bg-primary hover-card d-none" id="generate">
+                    <h3>Generate MIDI</h3>
+                </a>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <button id="downloadMidi" class="btn btn-success d-none" type="button">Download MIDI</button>
+            </div>
         </div>
     </div>
 

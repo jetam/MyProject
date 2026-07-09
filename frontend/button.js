@@ -66,24 +66,31 @@ export class ComposerButton extends Button
         this.sLog = logValues.COMPOSER;
     }
 
-    async httpRequest() {       
+    async httpRequest() {
 
-        const response = await fetch("http://127.0.0.1:5000/api/composer", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ a: 5, b: 3 })
-            })
+        const response = await fetch("http://127.0.0.1:5000/api/music/generate", {
+            method: "POST"
+        })
 
         console.log( "composer respose:" );
         console.log( response );
 
-        const res = await response.json();
-        console.log( "res:" );
-        console.log( res );
-    }
+        const contentType = response.headers.get("content-type") || "";
 
+        if ( contentType.includes("application/json") ) {
+            const res = await response.json();
+            console.log( "res:" );
+            console.log( res );
+
+            if ( res.status === "Model Not Selected" ) {
+                alert( "Model is not selected!" );
+            }
+            return;
+        }
+
+        const blob = await response.blob();
+        if ( this.onGenerated ) this.onGenerated( blob );
+    }
 }
 
 export const logValues = {

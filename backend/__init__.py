@@ -1,3 +1,3 @@
-from .pg_connection import Connection
-from .midi_parser import MidiParser
-from . import rnn
+from .shared.pg_connection import Connection
+from .music.services.midi_parser import MidiParser
+from .music.ml import rnn
