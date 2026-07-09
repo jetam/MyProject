@@ -24,12 +24,8 @@
   <component name="ChangeListManager">
     <list default="true" id="1e51aaa0-2ac5-47cc-b9c2-dafbbac28314" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/button.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/server_api.log" beforeDir="false" afterPath="$PROJECT_DIR$/backend/server_api.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/composer.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/composer.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/composer.js.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/main.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/main.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/main.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/predictor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/predictor.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
