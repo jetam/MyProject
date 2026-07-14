@@ -9,7 +9,7 @@ from ..services import midi_parser as Parser
 from ..services import midi_tester as midi_tester
 import os
 
-from .base_model import BaseMusicModel
+from .base_model import BaseMusicModel, SEED_NOTES
 
 
 MODEL_DIR = "./music/trained_models/transformer1"
@@ -303,6 +303,16 @@ def fineTune(model, song, seq_len=64, epochs=2, batch_size=4, lr=1e-5):
 def compose(model, seedSong, length=200, temperature=1.0, top_p=0.9):
     model.eval()
 
+    seedSong = seedSong[:SEED_NOTES]
+
+    total_tokens = len(seedSong) + length  # 1 token per note
+    if total_tokens > MAX_SEQ_LEN:
+        raise ValueError(
+            f"compose() would need {total_tokens} tokens "
+            f"({len(seedSong)} seed notes + {length} generated notes), "
+            f"but model max is {MAX_SEQ_LEN} tokens. Reduce length or SEED_NOTES."
+        )
+
     tokens  = torch.tensor(
         [encode_token(n[0], n[1], n[2]) for n in seedSong],
         dtype=torch.long, device=DEVICE
@@ -323,7 +333,9 @@ def compose(model, seedSong, length=200, temperature=1.0, top_p=0.9):
         chosen = torch.multinomial(sorted_probs, 1)
         return sorted_idx.gather(-1, chosen).item()
 
-    for _ in range(length):
+    for i in range(length):
+        if i % 20 == 0:
+            print("composing t1")
         rel = torch.zeros_like(pitches)
         rel[:, 1:] = pitches[:, 1:] - pitches[:, :-1]
         rel = torch.clamp(rel + 64, 0, 127)

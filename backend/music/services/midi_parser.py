@@ -114,9 +114,11 @@ class MidiParser:
             velocity = v * (MAX_MIDI_VELOCITY // self.MAX_VELOCITY)
             time = dt * music_config.DT_MAX_SECONDS / self.MAX_TIME
             converted.append((p, velocity, time))
+
+        print("end of ConvertedNotes")
         return converted
 
-def readMidiFiles(midiDir):  # todo: put this in midi parser
+def readMidiFiles(midiDir):
     songs = []
     parser = MidiParser()
 

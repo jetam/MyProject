@@ -15,6 +15,8 @@ function hideFrom(step) {
     }
 }
 
+//  todo: response handle errors
+
 let currentFileName = "";
 
 function onGenerated(blob) {
@@ -73,6 +75,15 @@ async function fetchModels() {
 }
 
 generateButton.addEventListener("click", async (e) => {
+
+    dropzone.innerHTML = `
+        <div class="spinner-border text-light" role="status"></div>
+        <span class="ms-2">generating MIDI...</span>
+    `;
+
+    generateButton.classList.add("d-none");
+
+
     e.preventDefault();
 
     hideFrom(downloadButton);
@@ -93,6 +104,7 @@ generateButton.addEventListener("click", async (e) => {
 
     const blob = await response.blob();
     onGenerated( blob );
+    dropzone.textContent = currentFileName;
 });
 
 modelSelect.addEventListener("change", async (e) => {

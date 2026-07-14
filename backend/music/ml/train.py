@@ -7,11 +7,18 @@ from . import music_transformer as tr0
 from . import music_transformerT1 as tr1
 from . import music_transformerT2 as tr2
 
-SONGS_DIR = Path(__file__).resolve().parent.parent / "midiFiles" / "midiFavourites"
+MIDI_FILES_DIR = Path(__file__).resolve().parent.parent / "midiFiles"
+SONGS_DIRS = [
+    MIDI_FILES_DIR / "midiFavourites",
+    MIDI_FILES_DIR / "piano-midi",
+    MIDI_FILES_DIR / "maestro" / "maestro-v3.0.0",
+]
 
 
 def train():
-    songs = readMidiFiles(SONGS_DIR)
+    songs = []
+    for songsDir in SONGS_DIRS:
+        songs += readMidiFiles(songsDir)
 
     print("Training RNN...")
     rnn.trainModel(songs)

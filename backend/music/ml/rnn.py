@@ -7,7 +7,7 @@ from .music_config import DT_VOCAB, VEL_VOCAB
 from ..services import midi_parser as Parser
 from ..services import midi_tester as midi_tester
 
-from .base_model import BaseMusicModel
+from .base_model import BaseMusicModel, SEED_NOTES
 
 
 SEQUENCE_LENGTH = 64
@@ -264,6 +264,8 @@ def compose(model, seedSong, length=100):
 
     model.eval()
 
+    seedSong = seedSong[:SEED_NOTES]
+
     seq_notes = [n[0] for n in seedSong]
     seq_others = [[n[1], n[2]] for n in seedSong]
 
@@ -297,7 +299,7 @@ def compose(model, seedSong, length=100):
             seq_notes = seq_notes[-SEQUENCE_LENGTH:]
             seq_others = seq_others[-SEQUENCE_LENGTH:]
 
-    return generated
+    return list(seedSong) + generated
 
 def trainModel(songs):
     dataset = MusicDataset(songs, SEQUENCE_LENGTH)

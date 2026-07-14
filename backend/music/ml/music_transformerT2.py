@@ -9,7 +9,7 @@ from ..services import midi_parser as Parser
 from ..services import midi_tester as midi_tester
 import os
 
-from .base_model import BaseMusicModel
+from .base_model import BaseMusicModel, SEED_NOTES
 
 
 MODEL_DIR = "./music/trained_models/transformer2"
@@ -374,6 +374,17 @@ def _nucleus_sample(logits, temperature, top_p):
 @torch.no_grad()
 def compose(model, seedSong, length=200, temperature=1.0, top_p=0.9, rep_penalty=1.2):
     model.eval()
+
+    seedSong = seedSong[:SEED_NOTES]
+
+    tokens_per_note = len(TYPE_CYCLE)
+    total_tokens = (len(seedSong) + length) * tokens_per_note
+    if total_tokens > MAX_SEQ_LEN:
+        raise ValueError(
+            f"compose() would need {total_tokens} tokens "
+            f"({len(seedSong)} seed notes + {length} generated notes) x {tokens_per_note} tokens/note, "
+            f"but model max is {MAX_SEQ_LEN} tokens. Reduce length or SEED_NOTES."
+        )
 
     # encode seed notes into token sequence
     seed_toks = []

@@ -19,8 +19,17 @@ async def upload_midi(midiFile: UploadFile = File(...)):
     composer.handleUpload(content) # fine tune and save model
     return {"status": "ok"}
 
+@router.get("/model/selection") # sends all possible models to frontend
+async def models():
+    return {"models": ModelNames.allModels()}
+
+@router.put("/model/select")
+async def select_model(selection: ModelSelection):
+    composer.selectModel(ModelNames(selection.model_name)) # also calls fineTune
+    return {"message": "Model selected successfully"}
+
 @router.post("/generate")
-async def generate_music():
+async def generate_music(): # todo: frontend: load indicator while generating
     if composer.currentModelName == "Not Selected":
         return {"status": "Model Not Selected"}
     midi_bytes = composer.generateMusic()
@@ -29,12 +38,3 @@ async def generate_music():
         media_type="audio/midi",
         headers={"Content-Disposition": "attachment; filename=generated.mid"},
     )
-
-@router.put("/model/select")
-async def select_model(selection: ModelSelection):
-    composer.selectModel(ModelNames(selection.model_name))
-    return {"message": "Model selected successfully"}
-
-@router.get("/model/selection") # sends all possible models to frontend
-async def models():
-    return {"models": ModelNames.allModels()}

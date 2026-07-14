@@ -29,7 +29,8 @@ class Composer:
     def selectModel(self, model: ModelNames):
         self.currentModelName = model
         self.currentModel = self.setModel(self.currentModelName)
-        self.currentModel.fineTune(self.currentSong) # todo!
+        self.currentModel.fineTune(self.currentSong) # todo: also store tempo of the song in composer. the generated song should have the same tempo
+        print( "end of selectModel. Fine tuning complete" )
 
     def setModel(self, model: ModelNames):
         match model:
@@ -70,9 +71,11 @@ class Composer:
         # self.currentModel.fineTune(self.currentSong)
 
     def generateMusic(self):
+        print("Generating Music begin")
         generatedNotes = self.currentModel.generate(self.currentSong)
         parser = Parser.MidiParser()
         convertedNotes = parser.convertedNotes(generatedNotes)
+        print("Generating Music end")
         return midi_tester.midiToBytes(convertedNotes)
 
 

@@ -8,7 +8,7 @@ import os
 from ..services import midi_parser as Parser
 from ..services import midi_tester as midi_tester
 
-from .base_model import BaseMusicModel
+from .base_model import BaseMusicModel, SEED_NOTES
 
 
 
@@ -232,6 +232,8 @@ def fineTune(model, song, seq_len=64, epochs=2, batch_size=4, lr=1e-5):
 @torch.no_grad()
 def compose(model, seedSong, length=200, temperature=1.0):
     model.eval()
+
+    seedSong = seedSong[:SEED_NOTES]
 
     def to_tensor(song):
         p = torch.tensor([n[0] for n in song], dtype=torch.long, device=DEVICE)
