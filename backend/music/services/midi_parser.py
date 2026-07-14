@@ -119,6 +119,7 @@ class MidiParser:
         return converted
 
 def readMidiFiles(midiDir):
+
     songs = []
     parser = MidiParser()
 

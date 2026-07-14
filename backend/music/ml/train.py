@@ -18,6 +18,7 @@ SONGS_DIRS = [
 def train():
     songs = []
     for songsDir in SONGS_DIRS:
+        print(f"Reading {songsDir}")
         songs += readMidiFiles(songsDir)
 
     print("Training RNN...")
