@@ -24,17 +24,6 @@
   <component name="ChangeListManager">
     <list default="true" id="1e51aaa0-2ac5-47cc-b9c2-dafbbac28314" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/ml/base_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/ml/base_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/ml/music_transformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/ml/music_transformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/ml/music_transformerT1.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/ml/music_transformerT1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/ml/music_transformerT2.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/ml/music_transformerT2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/ml/rnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/ml/rnn.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/router.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/router.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/services/composer.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/services/composer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/music/services/midi_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/music/services/midi_parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/server_api.log" beforeDir="false" afterPath="$PROJECT_DIR$/backend/server_api.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/js/composer.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/js/composer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/startServer.sh" beforeDir="false" afterPath="$PROJECT_DIR$/startServer.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

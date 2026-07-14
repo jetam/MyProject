@@ -286,7 +286,7 @@ def compose(model, seedSong, length=200, temperature=1.0):
 
 def trainModel(songs):
     model = MusicTransformer()
-    train(model, songs, epochs=2)
+    train(model, songs, epochs=5)
 
     return model
 

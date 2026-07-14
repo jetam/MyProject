@@ -315,7 +315,7 @@ def trainModel(songs):
 
     model = MusicRNN()
 
-    train(model, loader, epochs=3)
+    train(model, loader, epochs=5)
 
     return model
 
