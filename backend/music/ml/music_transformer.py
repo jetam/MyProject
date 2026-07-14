@@ -176,7 +176,7 @@ def train(model, songs, epochs=5, batch_size=8, lr=3e-4):
 
             total += loss.item()
 
-        print(f"Epoch {epoch+1} | loss {total:.4f}")
+        print(f"tr0 Epoch {epoch+1} | loss {total:.4f}")
 
     torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt"))
 

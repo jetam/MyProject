@@ -175,9 +175,9 @@ def train(model, dataloader, epochs=3, lr=1e-3): # todo: what is lr
 
             total += loss.item()
 
-        print(f"epoch {epoch} | loss {total:.4f}")
+        print(f"rnn epoch {epoch} | loss {total:.4f}")
 
-    torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt"))
+    torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained_{MODEL_NUM}.pt"))
 
 def loadModel():
     device = "cuda" if torch.cuda.is_available() else "cpu"

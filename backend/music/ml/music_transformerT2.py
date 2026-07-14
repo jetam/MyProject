@@ -262,7 +262,6 @@ def _make_optimizer(model, lr, weight_decay=0.1):
 
 
 def train(model, songs, epochs=5, batch_size=8, lr=3e-4, warmup_steps=500):
-    print( "training" )
     use_amp  = torch.cuda.is_available()
     model    = model.to(DEVICE)
     dataset  = MusicDataset(songs)
@@ -302,7 +301,7 @@ def train(model, songs, epochs=5, batch_size=8, lr=3e-4, warmup_steps=500):
 
             total += loss.item()
 
-        print(f"Epoch {epoch+1} | loss {total:.4f} | lr {scheduler.get_last_lr()[0]:.2e}")
+        print(f"tr2 Epoch {epoch+1} | loss {total:.4f} | lr {scheduler.get_last_lr()[0]:.2e}")
 
     torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt"))
 

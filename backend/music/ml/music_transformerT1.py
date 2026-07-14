@@ -241,7 +241,7 @@ def train(model, songs, epochs=5, batch_size=8, lr=3e-4, warmup_steps=500):
 
             total += loss.item()
 
-        print(f"Epoch {epoch+1} | loss {total:.4f} | lr {scheduler.get_last_lr()[0]:.2e}")
+        print(f"tr1 Epoch {epoch+1} | loss {total:.4f} | lr {scheduler.get_last_lr()[0]:.2e}")
 
     torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt"))
 
@@ -334,8 +334,7 @@ def compose(model, seedSong, length=200, temperature=1.0, top_p=0.9):
         return sorted_idx.gather(-1, chosen).item()
 
     for i in range(length):
-        if i % 20 == 0:
-            print("composing t1")
+
         rel = torch.zeros_like(pitches)
         rel[:, 1:] = pitches[:, 1:] - pitches[:, :-1]
         rel = torch.clamp(rel + 64, 0, 127)

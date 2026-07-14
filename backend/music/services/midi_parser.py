@@ -44,7 +44,7 @@ class MidiParser:
         relativeTempo = 1
 
         for msg in mid:
-            print( "        Midi msg: " + str(msg) )
+            # print( "        Midi msg: " + str(msg) )
             # todo: handle different channels? - have option to set only main channel
 
             noteType = msg.type
@@ -108,14 +108,14 @@ class MidiParser:
 
 
     def convertedNotes(self, generatedNotes): # todo: this is used after transformer. make so everything is universal
-        print( "in convertedNotes" )
+        # print( "in convertedNotes" )
         converted = []
         for p, v, dt in generatedNotes:
             velocity = v * (MAX_MIDI_VELOCITY // self.MAX_VELOCITY)
             time = dt * music_config.DT_MAX_SECONDS / self.MAX_TIME
             converted.append((p, velocity, time))
 
-        print("end of ConvertedNotes")
+        # print("end of ConvertedNotes")
         return converted
 
 def readMidiFiles(midiDir):
