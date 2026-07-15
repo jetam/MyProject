@@ -21,14 +21,14 @@ def train():
         print(f"Reading {songsDir}")
         songs += readMidiFiles(songsDir)
 
-    print("Training RNN...")
-    rnn.trainModel(songs)
+    # print("Training RNN...")
+    # rnn.trainModel(songs)
 
-    print("Training Transformer0...")
-    tr0.trainModel(songs)
-
-    print("Training TransformerT1...")
-    tr1.trainModel(songs)
+    # print("Training Transformer0...")
+    # tr0.trainModel(songs)
+    #
+    # print("Training TransformerT1...")
+    # tr1.trainModel(songs)
 
     print("Training TransformerT2...")
     tr2.trainModel(songs)

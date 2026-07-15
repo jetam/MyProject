@@ -133,10 +133,12 @@ def _rotate_half(x):
     return torch.cat([-x[..., half:], x[..., :half]], dim=-1)
 
 
-def _apply_rope(q, k, cos, sin):
+def _apply_rope(q, k, cos, sin, pos_offset=0):
     T   = q.shape[2]
-    c   = cos[:T].unsqueeze(0).unsqueeze(0)  # [1, 1, T, d_k]
-    s   = sin[:T].unsqueeze(0).unsqueeze(0)
+    # cast to q's dtype: cos/sin buffers are float32, but under autocast
+    # q/k/v arrive as float16 — mismatched dtypes make scaled_dot_product_attention error
+    c   = cos[pos_offset:pos_offset + T].to(q.dtype).unsqueeze(0).unsqueeze(0)  # [1, 1, T, d_k]
+    s   = sin[pos_offset:pos_offset + T].to(q.dtype).unsqueeze(0).unsqueeze(0)
     q   = q * c + _rotate_half(q) * s
     k   = k * c + _rotate_half(k) * s
     return q, k
@@ -159,7 +161,7 @@ class RoPEAttention(nn.Module):
         self.register_buffer('rope_cos', cos)
         self.register_buffer('rope_sin', sin)
 
-    def forward(self, x):
+    def forward(self, x, cache=None):
         B, T, _ = x.shape
         H, D    = self.nhead, self.d_k
 
@@ -167,14 +169,24 @@ class RoPEAttention(nn.Module):
         K = self.k(x).view(B, T, H, D).permute(0, 2, 1, 3)
         V = self.v(x).view(B, T, H, D).permute(0, 2, 1, 3)
 
-        Q, K = _apply_rope(Q, K, self.rope_cos, self.rope_sin)
+        # positions continue where the cache left off, so RoPE stays correct
+        pos_offset = cache[0].shape[2] if cache is not None else 0
+        Q, K = _apply_rope(Q, K, self.rope_cos, self.rope_sin, pos_offset)
 
-        # Flash Attention when available (PyTorch 2.0+), falls back gracefully
+        if cache is not None:
+            K = torch.cat([cache[0], K], dim=2)
+            V = torch.cat([cache[1], V], dim=2)
+
+        new_cache = (K, V)
+
+        # prefill (no cache yet, T queries over T keys) needs the causal mask;
+        # a cached decode step (1 new query over all past+self keys) never does
+        is_causal = cache is None
         drop = self.dropout_p if self.training else 0.0
-        out  = F.scaled_dot_product_attention(Q, K, V, is_causal=True, dropout_p=drop)
+        out  = F.scaled_dot_product_attention(Q, K, V, is_causal=is_causal, dropout_p=drop)
 
         out = out.permute(0, 2, 1, 3).contiguous().view(B, T, H * D)
-        return self.out(out)
+        return self.out(out), new_cache
 
 
 class TransformerLayer(nn.Module):
@@ -186,10 +198,11 @@ class TransformerLayer(nn.Module):
         self.norm2 = RMSNorm(d_model)
         self.drop  = nn.Dropout(dropout)
 
-    def forward(self, x):
-        x = x + self.drop(self.attn(self.norm1(x)))
+    def forward(self, x, cache=None):
+        attn_out, new_cache = self.attn(self.norm1(x), cache=cache)
+        x = x + self.drop(attn_out)
         x = x + self.drop(self.ff(self.norm2(x)))
-        return x
+        return x, new_cache
 
 
 class MusicTransformerT2(BaseMusicModel):
@@ -220,11 +233,14 @@ class MusicTransformerT2(BaseMusicModel):
             else:
                 nn.init.normal_(p, std=std)
 
-    def forward(self, tokens, types):
+    def forward(self, tokens, types, cache=None):
         x = self.tok_emb(tokens) + self.type_emb(types)
-        for layer in self.layers:
-            x = layer(x)
-        return self.out(self.norm(x))   # [B, T, VOCAB_SIZE]
+        new_cache = []
+        for i, layer in enumerate(self.layers):
+            layer_cache = cache[i] if cache is not None else None
+            x, updated = layer(x, cache=layer_cache)
+            new_cache.append(updated)
+        return self.out(self.norm(x)), new_cache   # logits: [B, T, VOCAB_SIZE]
 
     def fineTune(self, song):
         fineTune(self, song)
@@ -265,7 +281,7 @@ def train(model, songs, epochs=5, batch_size=8, lr=3e-4, warmup_steps=500):
     use_amp  = torch.cuda.is_available()
     model    = model.to(DEVICE)
     dataset  = MusicDataset(songs)
-    loader   = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=use_amp)
+    loader   = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=use_amp, num_workers=2)
     opt      = _make_optimizer(model, lr)
     scaler   = torch.amp.GradScaler('cuda', enabled=use_amp)
 
@@ -288,7 +304,7 @@ def train(model, songs, epochs=5, batch_size=8, lr=3e-4, warmup_steps=500):
             y       = y.to(DEVICE)
 
             with torch.amp.autocast('cuda', enabled=use_amp):
-                logits = model(x_tok, x_types)
+                logits, _ = model(x_tok, x_types)
                 loss   = loss_fn(logits, y)
 
             scaler.scale(loss).backward()
@@ -303,13 +319,13 @@ def train(model, songs, epochs=5, batch_size=8, lr=3e-4, warmup_steps=500):
 
         print(f"tr2 Epoch {epoch+1} | loss {total:.4f} | lr {scheduler.get_last_lr()[0]:.2e}")
 
-    torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt"))
+    torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained_{MODEL_NUM}.pt"))
 
     return model
 
 
 def loadModel():
-    model_path = os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt")
+    model_path = os.path.join(MODEL_DIR, f"pretrained_{MODEL_NUM}.pt")
     if not os.path.isfile(model_path):
         raise FileNotFoundError(f"No trained TransformerT2 model found at {model_path}")
 
@@ -322,6 +338,12 @@ def loadModel():
 
 
 def fineTune(model, song, notes_per_chunk=64, epochs=2, batch_size=4, lr=1e-5):
+
+    if len(song) <= notes_per_chunk + 1:
+        raise ValueError(
+            f"Seed song has {len(song)} notes, but fine-tuning needs more than "
+            f"notes_per_chunk={notes_per_chunk} notes."
+        )
 
     use_amp = torch.cuda.is_available()
     model = model.to(DEVICE)
@@ -344,7 +366,7 @@ def fineTune(model, song, notes_per_chunk=64, epochs=2, batch_size=4, lr=1e-5):
             y = y.to(DEVICE)
 
             with torch.amp.autocast('cuda', enabled=use_amp):
-                logits = model(x_tok, x_types)
+                logits, _ = model(x_tok, x_types)
                 loss = loss_fn(logits, y)
 
             scaler.scale(loss).backward()
@@ -390,7 +412,22 @@ def compose(model, seedSong, length=200, temperature=1.0, top_p=0.9, rep_penalty
     for note in seedSong:
         seed_toks.extend(encode_note(*note))
 
-    tokens = torch.tensor(seed_toks, dtype=torch.long, device=DEVICE).unsqueeze(0)
+    seed_tokens = torch.tensor(seed_toks, dtype=torch.long, device=DEVICE).unsqueeze(0)
+    seed_types = torch.tensor(
+        [TYPE_CYCLE[i % 3] for i in range(len(seed_toks))],
+        dtype=torch.long, device=DEVICE
+    ).unsqueeze(0)
+
+    # prefill: run the seed once to build the KV cache, keep its last-position logits
+    seed_logits, cache = model(seed_tokens, seed_types)
+    next_logits = seed_logits[0, -1].clone()
+
+    # precompute a reusable -inf mask per token type instead of rebuilding it every step
+    type_masks = {}
+    for t, (lo, hi) in VALID_RANGE.items():
+        m = torch.full((VOCAB_SIZE,), float('-inf'), device=DEVICE)
+        m[lo:hi] = 0.0
+        type_masks[t] = m
 
     # track recent pitches for repetition penalty
     recent_pitches = [n[0] for n in seedSong[-32:]]
@@ -401,28 +438,23 @@ def compose(model, seedSong, length=200, temperature=1.0, top_p=0.9, rep_penalty
         note_toks = []
 
         for tok_type in TYPE_CYCLE:   # generate PITCH → VEL → DT
-            T = tokens.shape[1]
-            types_t = torch.tensor(
-                [TYPE_CYCLE[i % 3] for i in range(T)],
-                dtype=torch.long, device=DEVICE
-            ).unsqueeze(0)
-
-            logits = model(tokens, types_t)[0, -1].clone()  # [VOCAB_SIZE]
-
-            # mask out tokens that don't belong to this type
-            lo, hi = VALID_RANGE[tok_type]
-            type_mask = torch.full((VOCAB_SIZE,), float('-inf'), device=DEVICE)
-            type_mask[lo:hi] = 0.0
-            logits = logits + type_mask
+            logits = next_logits + type_masks[tok_type]
 
             # repetition penalty on pitch tokens only
             if tok_type == T_PITCH:
                 for p in set(recent_pitches):
-                    logits[PITCH_OFF + p] /= rep_penalty
+                    idx = PITCH_OFF + p
+                    logits[idx] = logits[idx] * rep_penalty if logits[idx] < 0 else logits[idx] / rep_penalty
 
             tok = _nucleus_sample(logits, temperature, top_p)
             note_toks.append(tok)
-            tokens = torch.cat([tokens, torch.tensor([[tok]], device=DEVICE)], dim=1)
+
+            # feed just the new token through the model, extending the cache,
+            # to get the logits for whatever comes next
+            tok_tensor = torch.tensor([[tok]], dtype=torch.long, device=DEVICE)
+            type_tensor = torch.tensor([[tok_type]], dtype=torch.long, device=DEVICE)
+            step_logits, cache = model(tok_tensor, type_tensor, cache=cache)
+            next_logits = step_logits[0, -1].clone()
 
         pitch, vel, dt = decode_note(*note_toks)
         generated_notes.append((pitch, vel, dt))

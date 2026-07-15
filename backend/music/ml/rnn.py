@@ -180,20 +180,24 @@ def train(model, dataloader, epochs=3, lr=1e-3): # todo: what is lr
     torch.save(model.state_dict(), os.path.join(MODEL_DIR, f"pretrained_{MODEL_NUM}.pt"))
 
 def loadModel():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    model_path = os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt")
+    # model_path = os.path.join(MODEL_DIR, f"pretrained{MODEL_NUM}.pt")
+    model_path = os.path.join(MODEL_DIR, f"pretrained_{MODEL_NUM}.pt")
     if not os.path.isfile(model_path):
         raise FileNotFoundError(f"No trained RNN model found at {model_path}")
 
     model = MusicRNN()
-    model.load_state_dict(torch.load(model_path, map_location=device))
-    model.to(device)
+    model.load_state_dict(torch.load(model_path, map_location="cpu"))
     model.eval()
 
     return model
 
-def fineTune(model, song, seq_len=64, epochs=2, lr=1e-4):
+def fineTune(model, song, seq_len=64, epochs=2, batch_size=16, lr=3e-5):
+
+    if len(song) <= seq_len:
+        raise ValueError(
+            f"Seed song has {len(song)} notes, but fine-tuning needs more than "
+            f"seq_len={seq_len} notes."
+        )
 
     model.train()
 
@@ -202,15 +206,14 @@ def fineTune(model, song, seq_len=64, epochs=2, lr=1e-4):
 
     loader = DataLoader(
         dataset,
-        batch_size=16,
+        batch_size=batch_size,
         shuffle=True,
         num_workers=0,   # safer for single-song fine-tune
         collate_fn=collate_fn,
-        pin_memory=True
+        drop_last=True,
     )
 
-    # 2) optimizer (smaller LR than pretraining!)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.01)
     loss_fn = nn.CrossEntropyLoss()
 
     for epoch in range(epochs):
@@ -310,7 +313,6 @@ def trainModel(songs):
         shuffle=True,
         num_workers=2,
         collate_fn=collate_fn,
-        pin_memory=True
     )
 
     model = MusicRNN()
@@ -326,7 +328,7 @@ def composeMusic(seedSong):
 
     model = loadModel()
 
-    model = fineTune(model, seedSong, epochs=2, lr=1e-4)
+    model = fineTune(model, seedSong, epochs=2, lr=3e-5)
 
     # seedSong = songs[0][:SEQUENCE_LENGTH]
 

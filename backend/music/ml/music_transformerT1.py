@@ -290,6 +290,9 @@ def fineTune(model, song, seq_len=64, epochs=2, batch_size=4, lr=1e-5):
 
             opt.zero_grad()
             loss.backward()
+
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
             opt.step()
 
             total += loss.item()
